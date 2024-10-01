@@ -6,14 +6,14 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.scene.effect.DropShadow;
 
 public class TutorialManager {
     private Stage primaryStage;
@@ -28,40 +28,21 @@ public class TutorialManager {
     public void showTutorial() {
         previousScene = primaryStage.getScene();
 
-        VBox tutorialLayout = new VBox(20);
-        tutorialLayout.setAlignment(Pos.TOP_LEFT);
-        tutorialLayout.setPadding(new Insets(30));
+        ScrollPane scrollPane = new ScrollPane();
+        VBox tutorialLayout = new VBox(30);
+        tutorialLayout.setAlignment(Pos.TOP_CENTER);
+        tutorialLayout.setPadding(new Insets(40));
+        tutorialLayout.setStyle("-fx-background-color: #f0f0f0;");
 
-        Label titleLabel = new Label("How To Play");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        Label titleLabel = createStyledLabel("How To Play Wordle", 36, FontWeight.BOLD, "#2C3E50");
 
-        Label subtitleLabel = new Label("Guess the Wordle in 6 tries.");
-        subtitleLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        Label subtitleLabel = createStyledLabel("Guess the Wordle in 6 tries.", 24, FontWeight.NORMAL, "#34495E");
 
         VBox instructionsBox = createInstructionsBox();
-        VBox examplesBox = createExamplesBox();
+        HBox examplesBox = createExamplesBox();
         VBox scoringSystemBox = createScoringSystemBox();
 
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-
-        Button backButton = new Button("Back to Main Menu");
-        backButton.setStyle(
-                "-fx-background-color: #0095ff; " +
-                        "-fx-border-color: transparent; " +
-                        "-fx-border-width: 1px; " +
-                        "-fx-border-radius: 3px; " +
-                        "-fx-background-radius: 3px; " +
-                        "-fx-effect: innershadow(one-pass-box, rgba(255, 255, 255, 0.4), 0, 0, 0, 1); " +
-                        "-fx-text-fill: #fff; " +
-                        "-fx-font-family: -apple-system, system-ui, 'Segoe UI', 'Liberation Sans', sans-serif; " +
-                        "-fx-font-size: 13px; " +
-                        "-fx-font-weight: 400; " +
-                        "-fx-padding: 8px 0.8em; " +
-                        "-fx-cursor: hand; " +
-                        "-fx-alignment: center; "
-        );
-
+        Button backButton = createStyledButton("Back to Main Menu");
         backButton.setOnAction(e -> returnToMainMenu());
 
         tutorialLayout.getChildren().addAll(
@@ -70,19 +51,30 @@ public class TutorialManager {
                 instructionsBox,
                 examplesBox,
                 scoringSystemBox,
-                spacer,
                 backButton
         );
 
-        Scene tutorialScene = new Scene(tutorialLayout, 500, 800);
+        scrollPane.setContent(tutorialLayout);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: #f0f0f0;");
+
+        Scene tutorialScene = new Scene(scrollPane, 1200, 1000);
         primaryStage.setScene(tutorialScene);
+        primaryStage.setFullScreen(false);
     }
 
     private VBox createInstructionsBox() {
-        VBox instructionsBox = new VBox(10);
+        VBox instructionsBox = new VBox(15);
+        instructionsBox.setStyle("-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10;");
+        instructionsBox.setEffect(new DropShadow(5, Color.LIGHTGRAY));
+
+        Label instructionsTitle = createStyledLabel("Instructions", 22, FontWeight.BOLD, "#2980B9");
+
         instructionsBox.getChildren().addAll(
-                createBulletPoint("Each guess must be a valid 5-letter word."),
-                createBulletPoint("The color of the tiles will change to show how close your guess was to the word.")
+                instructionsTitle,
+                createBulletPoint("Each guess must be a valid word (5 or 6 letters)."),
+                createBulletPoint("The color of the tiles will change to show how close your guess was to the word."),
+                createBulletPoint("You have 6 attempts to guess the word correctly.")
         );
         return instructionsBox;
     }
@@ -90,63 +82,94 @@ public class TutorialManager {
     private HBox createBulletPoint(String text) {
         HBox bulletPoint = new HBox(10);
         bulletPoint.setAlignment(Pos.CENTER_LEFT);
-        Label bullet = new Label("•");
-        Label content = new Label(text);
+        Label bullet = createStyledLabel("•", 18, FontWeight.BOLD, "#E74C3C");
+        Label content = createStyledLabel(text, 16, FontWeight.NORMAL, "#2C3E50");
         content.setWrapText(true);
         bulletPoint.getChildren().addAll(bullet, content);
         return bulletPoint;
     }
 
-    private VBox createExamplesBox() {
-        VBox examplesBox = new VBox(20);
-        Label examplesLabel = new Label("Examples");
-        examplesLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+    private HBox createExamplesBox() {
+        HBox examplesBox = new HBox(20);
+        examplesBox.setAlignment(Pos.CENTER);
+        examplesBox.setStyle("-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10;");
+        examplesBox.setEffect(new DropShadow(5, Color.LIGHTGRAY));
 
-        examplesBox.getChildren().addAll(
-                examplesLabel,
-                createExampleRow("W", "O", "R", "D", "Y", "W is in the word and in the correct spot.", Color.GREEN),
-                createExampleRow("L", "I", "G", "H", "T", "I is in the word but in the wrong spot.", Color.GOLDENROD),
-                createExampleRow("R", "O", "G", "U", "E", "U is not in the word in any spot.", Color.GRAY)
-        );
+        VBox fiveLetterExamples = createExampleColumn("5-Letter Words",
+                new String[]{"W", "O", "R", "D", "S"},
+                new String[]{"P", "L", "A", "C", "E"},
+                new String[]{"V", "A", "G", "U", "E"});
+
+        VBox sixLetterExamples = createExampleColumn("6-Letter Words",
+                new String[]{"S", "E", "C", "R", "E", "T"},
+                new String[]{"W", "O", "N", "D", "E", "R"},
+                new String[]{"F", "A", "M", "O", "U", "S"});
+
+        examplesBox.getChildren().addAll(fiveLetterExamples, sixLetterExamples);
         return examplesBox;
     }
 
+    private VBox createExampleColumn(String title, String[] word1, String[] word2, String[] word3) {
+        VBox column = new VBox(15);
+        column.setAlignment(Pos.TOP_CENTER);
+
+        Label titleLabel = createStyledLabel(title, 20, FontWeight.BOLD, "#2980B9");
+
+        VBox examples = new VBox(10);
+        examples.getChildren().addAll(
+                createExampleRow(word1[0], word1[1], word1[2], word1[3], word1[4], word1.length > 5 ? word1[5] : null,
+                        word1[0] + " is in the word and in the correct spot.", Color.GREEN),
+                createExampleRow(word2[0], word2[1], word2[2], word2[3], word2[4], word2.length > 5 ? word2[5] : null,
+                        word2[1] + " is in the word but in the wrong spot.", Color.GOLD),
+                createExampleRow(word3[0], word3[1], word3[2], word3[3], word3[4], word3.length > 5 ? word3[5] : null,
+                        word3[4] + " is not in the word in any spot.", Color.GRAY)
+        );
+
+        column.getChildren().addAll(titleLabel, examples);
+        return column;
+    }
+
     private VBox createScoringSystemBox() {
-        VBox scoringSystemBox = new VBox(5);
-        scoringSystemBox.setPadding(new Insets(10, 0, 0, 0));
-        Label scoringTitle = new Label("Scoring System");
-        scoringTitle.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        VBox scoringSystemBox = new VBox(15);
+        scoringSystemBox.setStyle("-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10;");
+        scoringSystemBox.setEffect(new DropShadow(5, Color.LIGHTGRAY));
 
-        Label score1 = new Label("1st try correct = 100 points");
-        Label score2 = new Label("2nd try correct = 90 points");
-        Label score3 = new Label("3rd try correct = 80 points");
-        Label score4 = new Label("4th try correct = 70 points");
-        Label score5 = new Label("5th try correct = 60 points");
-        Label score6 = new Label("6th try correct = 50 points");
+        Label scoringTitle = createStyledLabel("Scoring System", 22, FontWeight.BOLD, "#2980B9");
 
-        score1.setFont(Font.font("Arial", FontWeight.MEDIUM, 14));
-        score2.setFont(Font.font("Arial", FontWeight.MEDIUM, 14));
-        score3.setFont(Font.font("Arial", FontWeight.MEDIUM, 14));
-        score4.setFont(Font.font("Arial", FontWeight.MEDIUM, 14));
-        score5.setFont(Font.font("Arial", FontWeight.MEDIUM, 14));
-        score6.setFont(Font.font("Arial", FontWeight.MEDIUM, 14));
+        HBox scoringColumns = new HBox(30);
+        scoringColumns.setAlignment(Pos.CENTER);
 
-        scoringSystemBox.getChildren().addAll(scoringTitle, score1, score2, score3, score4, score5, score6);
+        VBox attemptsColumn = new VBox(5);
+        VBox pointsColumn = new VBox(5);
+
+        String[] attempts = {"1st try", "2nd try", "3rd try", "4th try", "5th try", "6th try"};
+        String[] points = {"100 points", "90 points", "80 points", "70 points", "60 points", "50 points"};
+
+        for (int i = 0; i < attempts.length; i++) {
+            attemptsColumn.getChildren().add(createStyledLabel(attempts[i], 16, FontWeight.NORMAL, "#2C3E50"));
+            pointsColumn.getChildren().add(createStyledLabel(points[i], 16, FontWeight.BOLD, "#27AE60"));
+        }
+
+        scoringColumns.getChildren().addAll(attemptsColumn, pointsColumn);
+        scoringSystemBox.getChildren().addAll(scoringTitle, scoringColumns);
         return scoringSystemBox;
     }
 
-    private VBox createExampleRow(String l1, String l2, String l3, String l4, String l5, String explanation, Color highlightColor) {
+    private VBox createExampleRow(String l1, String l2, String l3, String l4, String l5, String l6, String explanation, Color highlightColor) {
         HBox letterBox = new HBox(5);
         letterBox.setAlignment(Pos.CENTER_LEFT);
         letterBox.getChildren().addAll(
-                createLetterBox(l1, explanation.contains(l1) && highlightColor == Color.GREEN ? highlightColor : Color.WHITE),
-                createLetterBox(l2, explanation.contains(l2) && highlightColor == Color.GOLDENROD ? highlightColor : Color.WHITE),
-                createLetterBox(l3, explanation.contains(l3) && highlightColor == Color.GOLDENROD ? highlightColor : Color.WHITE),
-                createLetterBox(l4, explanation.contains(l4) && highlightColor == Color.GRAY ? highlightColor : Color.WHITE),
-                createLetterBox(l5, explanation.contains(l5) && highlightColor == Color.GRAY ? highlightColor : Color.WHITE)
+                createLetterBox(l1, explanation.contains(l1) ? highlightColor : Color.WHITE),
+                createLetterBox(l2, explanation.contains(l2) ? highlightColor : Color.WHITE),
+                createLetterBox(l3, explanation.contains(l3) ? highlightColor : Color.WHITE),
+                createLetterBox(l4, explanation.contains(l4) ? highlightColor : Color.WHITE),
+                createLetterBox(l5, explanation.contains(l5) ? highlightColor : Color.WHITE)
         );
+        if (l6 != null) {
+            letterBox.getChildren().add(createLetterBox(l6, explanation.contains(l6) ? highlightColor : Color.WHITE));
+        }
 
-        Label explanationLabel = new Label(explanation);
+        Label explanationLabel = createStyledLabel(explanation, 14, FontWeight.NORMAL, "#2C3E50");
         explanationLabel.setWrapText(true);
 
         VBox exampleRow = new VBox(5);
@@ -154,30 +177,32 @@ public class TutorialManager {
         return exampleRow;
     }
 
-    private Label createLetterBox(String letter, Color bgColor) {
-        Label letterLabel = new Label(letter);
-        letterLabel.setAlignment(Pos.CENTER);
-        letterLabel.setMinSize(40, 40);
-        letterLabel.setMaxSize(40, 40);
-        letterLabel.setStyle(
+    private StackPane createLetterBox(String letter, Color bgColor) {
+        StackPane letterBox = new StackPane();
+        letterBox.setMinSize(40, 40);
+        letterBox.setMaxSize(40, 40);
+        letterBox.setStyle(
                 "-fx-border-color: #d3d6da; " +
                         "-fx-border-width: 2px; " +
                         "-fx-background-color: " + toRGBCode(bgColor) + ";" +
-                        "-fx-text-fill: " + (bgColor == Color.WHITE ? "black" : "white") + ";" +
-                        "-fx-font-weight: bold;"
+                        "-fx-background-radius: 5; " +
+                        "-fx-border-radius: 5;"
         );
 
-        // Add the easter egg to the "U" in "ROGUE"
+        Label letterLabel = createStyledLabel(letter, 18, FontWeight.BOLD, bgColor == Color.WHITE ? "#2C3E50" : "white");
+        letterBox.getChildren().add(letterLabel);
+
+        // Add the easter egg to the "U" in "VAGUE"
         if (letter.equals("U")) {
-            letterLabel.setOnMouseClicked(e -> openEasterEgg());
-            letterLabel.setStyle(letterLabel.getStyle() + "-fx-cursor: hand;");
+            letterBox.setOnMouseClicked(e -> openEasterEgg());
+            letterBox.setStyle(letterBox.getStyle() + "-fx-cursor: hand;");
         }
 
-        return letterLabel;
+        return letterBox;
     }
 
     private void openEasterEgg() {
-        HostServices hostServices = mainApplication.getHostServices();
+        HostServices hostServices = mainApplication.getAppHostServices();
         if (hostServices != null) {
             hostServices.showDocument("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
         } else {
@@ -190,6 +215,29 @@ public class TutorialManager {
                 (int) (color.getRed() * 255),
                 (int) (color.getGreen() * 255),
                 (int) (color.getBlue() * 255));
+    }
+
+    private Label createStyledLabel(String text, int fontSize, FontWeight fontWeight, String colorCode) {
+        Label label = new Label(text);
+        label.setFont(Font.font("Arial", fontWeight, fontSize));
+        label.setTextFill(Color.web(colorCode));
+        label.setWrapText(true);
+        label.setTextAlignment(TextAlignment.CENTER);
+        return label;
+    }
+
+    private Button createStyledButton(String text) {
+        Button button = new Button(text);
+        button.setStyle(
+                "-fx-background-color: #3498DB; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-size: 16px; " +
+                        "-fx-padding: 10 20; " +
+                        "-fx-background-radius: 5;"
+        );
+        button.setOnMouseEntered(e -> button.setStyle(button.getStyle() + "-fx-background-color: #2980B9;"));
+        button.setOnMouseExited(e -> button.setStyle(button.getStyle() + "-fx-background-color: #3498DB;"));
+        return button;
     }
 
     private void returnToMainMenu() {

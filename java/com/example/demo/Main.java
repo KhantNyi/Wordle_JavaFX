@@ -41,43 +41,48 @@ public class Main extends Application {
 
     private void showMainScreen() {
         VBox modeSelectionLayout = createModeSelectionLayout();
-        Scene modeSelectionScene = new Scene(modeSelectionLayout, 500, 800);
+        Scene modeSelectionScene = new Scene(modeSelectionLayout, 1200, 1000);
         primaryStage.setScene(modeSelectionScene);
+        primaryStage.setFullScreen(false);
         primaryStage.show();
     }
 
     private VBox createModeSelectionLayout() {
-        VBox layout = new VBox(15);  // Added spacing between buttons
+        VBox layout = new VBox(15);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(20));
-        layout.setStyle("-fx-background-color: #f5f5f5;");  // Light gray background
+        layout.setStyle("-fx-background-color: #f5f5f5;");
 
         Label titleLabel = new Label("Wordle");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 48));
         titleLabel.setTextFill(Color.BLACK);
         titleLabel.setPadding(new Insets(0, 0, 20, 0));
 
-        HBox singlePlayerBox = createModeBox("Singleplayer", "Classic Wordle experience",
-                "M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0z", // Circle
-                Color.web("#FF9800"), e -> startSinglePlayerGame());
+        HBox singlePlayer5LetterBox = createModeBox("5-Letter Singleplayer", "Classic Wordle experience",
+                "M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0z",
+                Color.web("#FF9800"), e -> startSinglePlayerGame(5));
+
+        HBox singlePlayer6LetterBox = createModeBox("6-Letter Singleplayer", "Extended Wordle challenge",
+                "M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0z",
+                Color.web("#4CAF50"), e -> startSinglePlayerGame(6));
 
         HBox multiPlayerBox = createModeBox("Multiplayer", "New 2 player mode",
-                "M8 0 L16 16 L0 16 Z", // Triangle
+                "M8 0 L16 16 L0 16 Z",
                 Color.web("#2196F3"), e -> startMultiPlayerGame());
 
         HBox tutorialBox = createModeBox("How to Play", "Learn the rules",
-                "M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-1-9h2v4H7V7zm0-3h2v2H7V4z", // Question mark
+                "M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-1-9h2v4H7V7zm0-3h2v2H7V4z",
                 Color.web("#795548"), e -> showTutorial());
 
         HBox singlePlayerScoreboardBox = createModeBox("SinglePlayer Scoreboard", "View singleplayer statistics",
-                "M0 0h16v16H0z", // Square
+                "M0 0h16v16H0z",
                 Color.web("#4CAF50"), e -> showSinglePlayerScoreboard());
 
         HBox multiPlayerScoreboardBox = createModeBox("MultiPlayer Scoreboard", "View multiplayer statistics",
-                "M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z", // X
+                "M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z",
                 Color.web("#9C27B0"), e -> showMultiPlayerScoreboard());
 
-        layout.getChildren().addAll(titleLabel, singlePlayerBox, multiPlayerBox,
+        layout.getChildren().addAll(titleLabel, singlePlayer5LetterBox, singlePlayer6LetterBox, multiPlayerBox,
                 singlePlayerScoreboardBox, multiPlayerScoreboardBox, tutorialBox);
         return layout;
     }
@@ -97,7 +102,6 @@ public class Main extends Application {
                         "-fx-cursor: hand; "
         );
 
-        // Create icon
         SVGPath icon = new SVGPath();
         icon.setContent(iconPath);
         icon.setFill(Color.WHITE);
@@ -109,12 +113,10 @@ public class Main extends Application {
         iconBox.setPrefSize(40, 40);
         iconBox.setStyle("-fx-background-color: " + toRGBCode(bgColor) + "; -fx-background-radius: 5;");
 
-        // Create text content
         VBox textBox = new VBox(2);
         Label titleLabel = new Label(title);
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         titleLabel.setTextFill(Color.BLACK);
-
         Label descLabel = new Label(description);
         descLabel.setFont(Font.font("Arial", 12));
         descLabel.setTextFill(Color.GRAY);
@@ -127,7 +129,6 @@ public class Main extends Application {
         return box;
     }
 
-    // Helper method to convert Color to RGB code
     private String toRGBCode(Color color) {
         return String.format("#%02X%02X%02X",
                 (int) (color.getRed() * 255),
@@ -135,16 +136,19 @@ public class Main extends Application {
                 (int) (color.getBlue() * 255));
     }
 
-    private void startSinglePlayerGame() {
+    private void startSinglePlayerGame(int wordLength) {
         if (singlePlayerUIManager == null) {
             singlePlayerUIManager = new SinglePlayerUIManager(statisticsManager, wordValidator);
-            singlePlayerUIManager.setWordleGame(wordleGame);
         }
-        wordleGame.setSinglePlayerUIManager(singlePlayerUIManager);
-        VBox gameLayout = singlePlayerUIManager.createSinglePlayerGameLayout();
-        Scene gameScene = new Scene(gameLayout);
-        primaryStage.setScene(gameScene);
+        wordleGame.setWordLength(wordLength);
+        wordleGame.setSinglePlayerUIManager(singlePlayerUIManager);  // Set the SinglePlayerUIManager
+        singlePlayerUIManager.setWordLength(wordLength);
+        singlePlayerUIManager.setWordleGame(wordleGame);
         wordleGame.startNewSinglePlayerGame();
+        VBox gameLayout = singlePlayerUIManager.createSinglePlayerGameLayout();
+        Scene gameScene = new Scene(gameLayout, 1200, 1000);
+        primaryStage.setScene(gameScene);
+        primaryStage.setFullScreen(false);
         gameLayout.requestFocus();
     }
 
@@ -154,9 +158,10 @@ public class Main extends Application {
             multiPlayerUIManager.setWordleGame(wordleGame);
         }
         wordleGame.setMultiPlayerUIManager(multiPlayerUIManager);
-        VBox gameLayout = multiPlayerUIManager.createMultiPlayerGameLayout();
-        Scene gameScene = new Scene(gameLayout);
+        VBox gameLayout = multiPlayerUIManager.createBaseLayout("Multiplayer Wordle");
+        Scene gameScene = new Scene(gameLayout, 1200, 1000);
         primaryStage.setScene(gameScene);
+        primaryStage.setFullScreen(false);
         multiPlayerUIManager.initializeMultiplayerGame();
         gameLayout.requestFocus();
     }
@@ -171,7 +176,8 @@ public class Main extends Application {
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 32));
         titleLabel.setTextFill(Color.BLACK);
 
-        VBox statsNode = statisticsManager.getSinglePlayerStatisticsNode();
+        VBox stats5LetterNode = statisticsManager.getSinglePlayerStatisticsNode(5);
+        VBox stats6LetterNode = statisticsManager.getSinglePlayerStatisticsNode(6);
 
         Button backButton = new Button("Back to Main Menu");
         backButton.setOnAction(e -> showMainScreen());
@@ -184,10 +190,11 @@ public class Main extends Application {
                         "-fx-background-radius: 5;"
         );
 
-        scoreboardLayout.getChildren().addAll(titleLabel, statsNode, backButton);
+        scoreboardLayout.getChildren().addAll(titleLabel, stats5LetterNode, stats6LetterNode, backButton);
 
-        Scene scoreboardScene = new Scene(scoreboardLayout, 400, 600);
+        Scene scoreboardScene = new Scene(scoreboardLayout, 1200, 1000);
         primaryStage.setScene(scoreboardScene);
+        primaryStage.setFullScreen(false);
     }
 
     private void showMultiPlayerScoreboard() {
@@ -215,8 +222,9 @@ public class Main extends Application {
 
         scoreboardLayout.getChildren().addAll(titleLabel, statsNode, backButton);
 
-        Scene scoreboardScene = new Scene(scoreboardLayout, 400, 600);
+        Scene scoreboardScene = new Scene(scoreboardLayout, 1200, 1000);
         primaryStage.setScene(scoreboardScene);
+        primaryStage.setFullScreen(false);
     }
 
     private void showTutorial() {
@@ -224,10 +232,12 @@ public class Main extends Application {
     }
 
     public void returnToMainScreen() {
-        javafx.application.Platform.runLater(this::showMainScreen);
+        javafx.application.Platform.runLater(() -> {
+            showMainScreen();
+            primaryStage.setFullScreen(false);
+        });
     }
 
-    // New method to get HostServices
     public HostServices getAppHostServices() {
         return getHostServices();
     }

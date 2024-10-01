@@ -6,7 +6,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
-public class UIManager {
+public abstract class UIManager {
     protected StatisticsManager statisticsManager;
     protected WordleGame wordleGame;
     protected WordValidator wordValidator;
@@ -14,15 +14,22 @@ public class UIManager {
     protected GridPane keyboardLayout;
     protected Label statsLabel;
     protected VBox root;
-    protected final int wordLength = 5;
+    protected int wordLength;
+
 
     public UIManager(StatisticsManager statisticsManager, WordValidator wordValidator) {
         this.statisticsManager = statisticsManager;
         this.wordValidator = wordValidator;
+        this.wordLength = 5; // Default to 5-letter mode
     }
 
     public void setWordleGame(WordleGame wordleGame) {
         this.wordleGame = wordleGame;
+        this.wordLength = wordleGame.getWordLength();
+    }
+
+    public void setWordLength(int length) {
+        this.wordLength = length;
     }
 
     protected VBox createBaseLayout(String title) {
@@ -33,11 +40,16 @@ public class UIManager {
         Label titleLabel = new Label(title);
         titleLabel.setFont(new Font("Arial Black", 36));
         titleLabel.setTextFill(Color.BLACK);
+        titleLabel.setAlignment(Pos.CENTER);
 
         statsLabel = new Label();
         statsLabel.setFont(new Font("Arial", 16));
 
-        root.getChildren().addAll(titleLabel);
+        HBox topBar = new HBox(20);
+        topBar.setAlignment(Pos.CENTER);
+        topBar.getChildren().addAll(titleLabel);
+
+        root.getChildren().addAll(topBar);
 
         return root;
     }
@@ -112,7 +124,6 @@ public class UIManager {
     }
 
     public void showAlert(String message) {
-        // This method can remain as a fallback, but we'll primarily use the fancy alert in WordleGame
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Wordle");
         alert.setHeaderText(null);
@@ -178,13 +189,28 @@ public class UIManager {
         keyboardLayout.getChildren().clear();
         initializeKeyboard();
 
-        statsLabel.setVisible(true);
-        statsLabel.setManaged(true);
+        statsLabel.setVisible(false);
+        statsLabel.setManaged(false);
 
         root.getChildren().clear();
-        Label titleLabel = new Label("WORDLE");
+        Label titleLabel = new Label("WORDLE - " + wordLength + " Letters");
         titleLabel.setFont(new Font("Arial Black", 36));
         titleLabel.setTextFill(Color.BLACK);
-        root.getChildren().addAll(titleLabel, gridPane, keyboardLayout, statsLabel);
+
+        HBox topBar = new HBox(20);
+        topBar.setAlignment(Pos.CENTER);
+        topBar.getChildren().addAll(titleLabel);
+
+        root.getChildren().addAll(topBar, gridPane, keyboardLayout, statsLabel);
+    }
+
+
+
+    protected void returnToMainMenu() {
+        if (wordleGame != null) {
+            wordleGame.returnToMainScreen();
+        } else {
+            System.err.println("Error: WordleGame is null in UIManager");
+        }
     }
 }

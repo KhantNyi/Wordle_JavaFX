@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.input.KeyCode;
@@ -16,7 +17,7 @@ public class SinglePlayerUIManager extends UIManager {
     }
 
     public VBox createSinglePlayerGameLayout() {
-        VBox layout = createBaseLayout("WORDLE");
+        VBox layout = createBaseLayout("WORDLE - " + wordLength + " Letters");
 
         initializeGridPane();
         initializeKeyboard();
@@ -25,6 +26,8 @@ public class SinglePlayerUIManager extends UIManager {
 
         setupKeyboardActions();
 
+        // Set fixed dimensions for the scene
+        root.setPrefSize(1200, 1000);
         return layout;
     }
 
@@ -35,14 +38,26 @@ public class SinglePlayerUIManager extends UIManager {
             } else if (event.getCode() == KeyCode.BACK_SPACE) {
                 wordleGame.handleBackspace();
             } else if (event.getCode() == KeyCode.ENTER) {
-                wordleGame.processGuess();
+                String currentGuess = getCurrentGuessFromGrid(wordleGame.getCurrentRow());
+                wordleGame.processGuess(currentGuess);
             }
         });
         root.requestFocus();
     }
 
+    private String getCurrentGuessFromGrid(int row) {
+        StringBuilder guess = new StringBuilder();
+        for (int col = 0; col < wordLength; col++) {
+            Label cell = (Label) gridPane.getChildren().get(row * wordLength + col);
+            guess.append(cell.getText());
+        }
+        return guess.toString();
+    }
+
     @Override
     public void endGame() {
+        statsLabel.setVisible(false);
+        statsLabel.setManaged(false);
         super.endGame();
         showEndGameOptions();
     }
@@ -97,13 +112,11 @@ public class SinglePlayerUIManager extends UIManager {
 
     private void playAgain() {
         resetUI();
+
         wordleGame.startNewSinglePlayerGame();
+
         setupKeyboardActions();
         root.requestFocus();
-    }
-
-    private void returnToMainMenu() {
-        wordleGame.returnToMainScreen();
     }
 
     @Override
@@ -114,12 +127,28 @@ public class SinglePlayerUIManager extends UIManager {
         root.getChildren().clear();
 
         // Recreate and add the components
-        Label titleLabel = new Label("WORDLE");
+        Label titleLabel = new Label("WORDLE - " + wordLength + " Letters");
         titleLabel.setFont(new Font("Arial Black", 36));
         root.getChildren().addAll(titleLabel, gridPane, keyboardLayout, statsLabel);
 
         // Ensure the statsLabel is properly managed
-        statsLabel.setVisible(true);
-        statsLabel.setManaged(true);
+        statsLabel.setVisible(false);
+        statsLabel.setManaged(false);
+
+        // Set fixed dimensions for the scene
+        root.setPrefSize(1200, 1000);
+    }
+
+    // New method to update the word length
+    public void updateWordLength(int newLength) {
+        this.wordLength = newLength;
+        resetUI();
+    }
+
+    // Override the setWordleGame method to set the word length
+    @Override
+    public void setWordleGame(WordleGame wordleGame) {
+        super.setWordleGame(wordleGame);
+        this.wordLength = wordleGame.getWordLength();
     }
 }

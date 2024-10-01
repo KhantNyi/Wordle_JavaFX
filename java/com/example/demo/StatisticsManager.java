@@ -9,14 +9,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class StatisticsManager {
 
     // Single-player statistics
-    private int singlePlayerGamesPlayed;
-    private int singlePlayerWins;
-    private int singlePlayerLosses;
-    private int singlePlayerTotalGuessesForWins;
-    private int singlePlayerTotalScore;
+    private Map<Integer, SinglePlayerStats> singlePlayerStatsByLength;
 
     // Multiplayer statistics
     private int multiPlayerGamesPlayed;
@@ -34,11 +33,10 @@ public class StatisticsManager {
     }
 
     private void resetStats() {
-        singlePlayerGamesPlayed = 0;
-        singlePlayerWins = 0;
-        singlePlayerLosses = 0;
-        singlePlayerTotalGuessesForWins = 0;
-        singlePlayerTotalScore = 0;
+        singlePlayerStatsByLength = new HashMap<>();
+        singlePlayerStatsByLength.put(5, new SinglePlayerStats());
+        singlePlayerStatsByLength.put(6, new SinglePlayerStats());
+
         multiPlayerGamesPlayed = 0;
         player1Wins = 0;
         player2Wins = 0;
@@ -51,24 +49,24 @@ public class StatisticsManager {
     }
 
     // Single-player methods
-    public void incrementSinglePlayerGamesPlayed() {
-        singlePlayerGamesPlayed++;
+    public void incrementSinglePlayerGamesPlayed(int wordLength) {
+        singlePlayerStatsByLength.get(wordLength).gamesPlayed++;
     }
 
-    public void incrementSinglePlayerWins() {
-        singlePlayerWins++;
+    public void incrementSinglePlayerWins(int wordLength) {
+        singlePlayerStatsByLength.get(wordLength).wins++;
     }
 
-    public void incrementSinglePlayerLosses() {
-        singlePlayerLosses++;
+    public void incrementSinglePlayerLosses(int wordLength) {
+        singlePlayerStatsByLength.get(wordLength).losses++;
     }
 
-    public void addSinglePlayerGuessesForWin(int guesses) {
-        singlePlayerTotalGuessesForWins += guesses;
+    public void addSinglePlayerGuessesForWin(int guesses, int wordLength) {
+        singlePlayerStatsByLength.get(wordLength).totalGuessesForWins += guesses;
     }
 
-    public void addScore(int score) {
-        singlePlayerTotalScore += score;
+    public void addScore(int score, int wordLength) {
+        singlePlayerStatsByLength.get(wordLength).totalScore += score;
     }
 
     // Multiplayer methods
@@ -105,13 +103,15 @@ public class StatisticsManager {
         multiPlayerTotalScore += score;
     }
 
-    public String getSinglePlayerStatistics() {
-        double averageGuesses = singlePlayerWins > 0 ? (double) singlePlayerTotalGuessesForWins / singlePlayerWins : 0;
-        double averageScore = singlePlayerGamesPlayed > 0 ? (double) singlePlayerTotalScore / singlePlayerGamesPlayed : 0;
-        double winRate = singlePlayerGamesPlayed > 0 ? (double) singlePlayerWins / singlePlayerGamesPlayed * 100 : 0;
+    public String getSinglePlayerStatistics(int wordLength) {
+        SinglePlayerStats stats = singlePlayerStatsByLength.get(wordLength);
+        double averageGuesses = stats.wins > 0 ? (double) stats.totalGuessesForWins / stats.wins : 0;
+        double averageScore = stats.gamesPlayed > 0 ? (double) stats.totalScore / stats.gamesPlayed : 0;
+        double winRate = stats.gamesPlayed > 0 ? (double) stats.wins / stats.gamesPlayed * 100 : 0;
 
         return String.format(
-                "Games Played: %d\n" +
+                "%d-Letter Mode:\n" +
+                        "Games Played: %d\n" +
                         "Wins: %d\n" +
                         "Losses: %d\n" +
                         "\n" +
@@ -119,12 +119,13 @@ public class StatisticsManager {
                         "\n" +
                         "Average Guesses per Win: %.2f\n" +
                         "Total Score: %d",
-                singlePlayerGamesPlayed,
-                singlePlayerWins,
-                singlePlayerLosses,
+                wordLength,
+                stats.gamesPlayed,
+                stats.wins,
+                stats.losses,
                 winRate,
                 averageGuesses,
-                singlePlayerTotalScore
+                stats.totalScore
         );
     }
 
@@ -143,10 +144,12 @@ public class StatisticsManager {
     }
 
     public String getAllStatistics() {
-        return getSinglePlayerStatistics() + "\n\n" + getMultiPlayerStatistics();
+        return getSinglePlayerStatistics(5) + "\n\n" +
+                getSinglePlayerStatistics(6) + "\n\n" +
+                getMultiPlayerStatistics();
     }
 
-    public VBox getSinglePlayerStatisticsNode() {
+    public VBox getSinglePlayerStatisticsNode(int wordLength) {
         VBox statsBox = new VBox(10);
         statsBox.setAlignment(Pos.CENTER);
         statsBox.setPadding(new Insets(20));
@@ -159,19 +162,20 @@ public class StatisticsManager {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);"
         );
 
-        Label titleLabel = new Label("Single Player Statistics");
+        Label titleLabel = new Label(wordLength + "-Letter Mode Statistics");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         titleLabel.setTextFill(Color.BLACK);
 
-        double winRate = singlePlayerGamesPlayed > 0 ? (double) singlePlayerWins / singlePlayerGamesPlayed * 100 : 0;
-        double averageGuesses = singlePlayerWins > 0 ? (double) singlePlayerTotalGuessesForWins / singlePlayerWins : 0;
+        SinglePlayerStats stats = singlePlayerStatsByLength.get(wordLength);
+        double winRate = stats.gamesPlayed > 0 ? (double) stats.wins / stats.gamesPlayed * 100 : 0;
+        double averageGuesses = stats.wins > 0 ? (double) stats.totalGuessesForWins / stats.wins : 0;
 
-        HBox gamesPlayedBox = createStatRow("Games Played", String.valueOf(singlePlayerGamesPlayed));
-        HBox winsBox = createStatRow("Wins", String.valueOf(singlePlayerWins));
-        HBox lossesBox = createStatRow("Losses", String.valueOf(singlePlayerLosses));
+        HBox gamesPlayedBox = createStatRow("Games Played", String.valueOf(stats.gamesPlayed));
+        HBox winsBox = createStatRow("Wins", String.valueOf(stats.wins));
+        HBox lossesBox = createStatRow("Losses", String.valueOf(stats.losses));
         HBox winRateBox = createStatRow("Win Rate", String.format("%.2f%%", winRate));
         HBox avgGuessesBox = createStatRow("Avg Guesses per Win", String.format("%.2f", averageGuesses));
-        HBox totalScoreBox = createStatRow("Total Score", String.valueOf(singlePlayerTotalScore));
+        HBox totalScoreBox = createStatRow("Total Score", String.valueOf(stats.totalScore));
 
         statsBox.getChildren().addAll(titleLabel, gamesPlayedBox, winsBox, lossesBox, winRateBox, avgGuessesBox, totalScoreBox);
         return statsBox;
@@ -202,10 +206,27 @@ public class StatisticsManager {
 
         playersBox.getChildren().addAll(player1Stats, player2Stats);
 
-        HBox gamesPlayedBox = createStatRow("Total Games Played", String.valueOf(multiPlayerGamesPlayed));
+        // Create a centered HBox for the "Games Played" statistic
+        HBox gamesPlayedBox = createCenteredStatRow("Total Games Played", String.valueOf(multiPlayerGamesPlayed));
 
         statsBox.getChildren().addAll(titleLabel, playersBox, gamesPlayedBox);
         return statsBox;
+    }
+
+    private HBox createCenteredStatRow(String label, String value) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER);
+
+        Label labelNode = new Label(label + ":");
+        labelNode.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        labelNode.setTextFill(Color.BLACK);
+
+        Label valueNode = new Label(value);
+        valueNode.setFont(Font.font("Arial", 14));
+        valueNode.setTextFill(Color.GRAY);
+
+        row.getChildren().addAll(labelNode, valueNode);
+        return row;
     }
 
     private VBox createPlayerStatsBox(String playerName, int wins, int losses, int totalScore) {
@@ -261,5 +282,13 @@ public class StatisticsManager {
 
         row.getChildren().addAll(labelNode, valueNode);
         return row;
+    }
+
+    private class SinglePlayerStats {
+        int gamesPlayed;
+        int wins;
+        int losses;
+        int totalGuessesForWins;
+        int totalScore;
     }
 }
