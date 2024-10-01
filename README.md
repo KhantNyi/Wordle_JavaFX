@@ -13,5 +13,11 @@ Set up a JavaFX project in IntelliJ and put all these files inside the project.
 - Multiplayer Scoreboard (Game statistics for multiplayer mode including scoring system)
 - Tutorial (How to play section with a fun easter egg embedded in the code)
 
-## Version 1.1
+## Version 1.2
 - Added a new Singleplayer mode (6 letter word)
+- Added a new Mulitplayer mode (6 letter word)
+
+## Other changes
+- Smoothing out UI and fixed the inconsistency of dimensions for different screens (windows) by setting a fixed height and width.
+- Introduce a new Rounds Played logic in Multiplayer statistics where a round consists of 2 games where Player 1 and Player 2 switch roles. Originally, a game is counted when player 1 sets the word and player 2 guesses the word. I kept the games played counter and added a new rounds played.
+- Updated the TutorialManager to include how to play tutorial for new addition (6 letter word) mode.
