@@ -12,3 +12,6 @@ Set up a JavaFX project in IntelliJ and put all these files inside the project.
 - Singleplayer Scoreboard (Game statistics for singleplayer mode)
 - Multiplayer Scoreboard (Game statistics for multiplayer mode including scoring system)
 - Tutorial (How to play section with a fun easter egg embedded in the code)
+
+# Version 1.1
+- Added a new Singleplayer mode (6 letter word)
