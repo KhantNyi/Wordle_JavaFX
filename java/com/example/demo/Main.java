@@ -66,9 +66,13 @@ public class Main extends Application {
                 "M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0z",
                 Color.web("#4CAF50"), e -> startSinglePlayerGame(6));
 
-        HBox multiPlayerBox = createModeBox("Multiplayer", "New 2 player mode",
+        HBox multiPlayer5LetterBox = createModeBox("5-Letter Multiplayer", "Classic 2 player mode",
                 "M8 0 L16 16 L0 16 Z",
-                Color.web("#2196F3"), e -> startMultiPlayerGame());
+                Color.web("#2196F3"), e -> startMultiPlayerGame(5));
+
+        HBox multiPlayer6LetterBox = createModeBox("6-Letter Multiplayer", "Extended 2 player mode",
+                "M8 0 L16 16 L0 16 Z",
+                Color.web("#9C27B0"), e -> startMultiPlayerGame(6));
 
         HBox tutorialBox = createModeBox("How to Play", "Learn the rules",
                 "M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-1-9h2v4H7V7zm0-3h2v2H7V4z",
@@ -82,7 +86,8 @@ public class Main extends Application {
                 "M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z",
                 Color.web("#9C27B0"), e -> showMultiPlayerScoreboard());
 
-        layout.getChildren().addAll(titleLabel, singlePlayer5LetterBox, singlePlayer6LetterBox, multiPlayerBox,
+        layout.getChildren().addAll(titleLabel, singlePlayer5LetterBox, singlePlayer6LetterBox,
+                multiPlayer5LetterBox, multiPlayer6LetterBox,
                 singlePlayerScoreboardBox, multiPlayerScoreboardBox, tutorialBox);
         return layout;
     }
@@ -141,7 +146,7 @@ public class Main extends Application {
             singlePlayerUIManager = new SinglePlayerUIManager(statisticsManager, wordValidator);
         }
         wordleGame.setWordLength(wordLength);
-        wordleGame.setSinglePlayerUIManager(singlePlayerUIManager);  // Set the SinglePlayerUIManager
+        wordleGame.setSinglePlayerUIManager(singlePlayerUIManager);
         singlePlayerUIManager.setWordLength(wordLength);
         singlePlayerUIManager.setWordleGame(wordleGame);
         wordleGame.startNewSinglePlayerGame();
@@ -152,13 +157,15 @@ public class Main extends Application {
         gameLayout.requestFocus();
     }
 
-    private void startMultiPlayerGame() {
+    private void startMultiPlayerGame(int wordLength) {
         if (multiPlayerUIManager == null) {
             multiPlayerUIManager = new MultiPlayerUIManager(statisticsManager, wordValidator, primaryStage);
-            multiPlayerUIManager.setWordleGame(wordleGame);
         }
+        wordleGame.setWordLength(wordLength);
         wordleGame.setMultiPlayerUIManager(multiPlayerUIManager);
-        VBox gameLayout = multiPlayerUIManager.createBaseLayout("Multiplayer Wordle");
+        multiPlayerUIManager.setWordLength(wordLength);
+        multiPlayerUIManager.setWordleGame(wordleGame);
+        VBox gameLayout = multiPlayerUIManager.createBaseLayout("Multiplayer Wordle - " + wordLength + " Letters");
         Scene gameScene = new Scene(gameLayout, 1200, 1000);
         primaryStage.setScene(gameScene);
         primaryStage.setFullScreen(false);
@@ -207,7 +214,8 @@ public class Main extends Application {
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 32));
         titleLabel.setTextFill(Color.BLACK);
 
-        VBox statsNode = statisticsManager.getMultiPlayerStatisticsNode();
+        VBox stats5LetterNode = statisticsManager.getMultiPlayerStatisticsNode(5);
+        VBox stats6LetterNode = statisticsManager.getMultiPlayerStatisticsNode(6);
 
         Button backButton = new Button("Back to Main Menu");
         backButton.setOnAction(e -> showMainScreen());
@@ -220,7 +228,7 @@ public class Main extends Application {
                         "-fx-background-radius: 5;"
         );
 
-        scoreboardLayout.getChildren().addAll(titleLabel, statsNode, backButton);
+        scoreboardLayout.getChildren().addAll(titleLabel, stats5LetterNode, stats6LetterNode, backButton);
 
         Scene scoreboardScene = new Scene(scoreboardLayout, 1200, 1000);
         primaryStage.setScene(scoreboardScene);

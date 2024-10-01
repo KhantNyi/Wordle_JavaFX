@@ -14,7 +14,6 @@ import javafx.stage.Stage;
 
 public class MultiPlayerUIManager extends UIManager {
 
-    private static final int MULTIPLAYER_WORD_LENGTH = 5;
     private MultiplayerRoleManager roleManager;
     private Label playerTurnLabel;
     private GridPane wordSetterGrid;
@@ -66,7 +65,9 @@ public class MultiPlayerUIManager extends UIManager {
     }
 
     public void updateUIForNewGame(boolean isPlayer1SettingWord) {
-        playerTurnLabel.setText(isPlayer1SettingWord ? "Player 1's Turn: Set a 5-letter word" : "Player 2's Turn: Set a 5-letter word");
+        playerTurnLabel.setText(isPlayer1SettingWord ?
+                "Player 1's Turn: Set a " + wordLength + "-letter word" :
+                "Player 2's Turn: Set a " + wordLength + "-letter word");
         wordSetterGrid.setVisible(true);
         wordGuesserBox.setVisible(false);
         currentWordSetterCol = 0;
@@ -80,7 +81,9 @@ public class MultiPlayerUIManager extends UIManager {
     }
 
     public void transitionToGuessingPhase(boolean isPlayer1Guessing) {
-        playerTurnLabel.setText(isPlayer1Guessing ? "Player 1's Turn: Guess the 5-letter word" : "Player 2's Turn: Guess the 5-letter word");
+        playerTurnLabel.setText(isPlayer1Guessing ?
+                "Player 1's Turn: Guess the " + wordLength + "-letter word" :
+                "Player 2's Turn: Guess the " + wordLength + "-letter word");
         wordSetterGrid.setVisible(false);
         wordGuesserBox.setVisible(true);
         resetGuessingState();
@@ -88,7 +91,7 @@ public class MultiPlayerUIManager extends UIManager {
     }
 
     private Label createPlayerTurnLabel() {
-        Label label = new Label("Player 1's Turn: Set a 5-letter word");
+        Label label = new Label("Player 1's Turn: Set a " + wordLength + "-letter word");
         label.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         label.setTextFill(Color.BLACK);
         return label;
@@ -100,7 +103,7 @@ public class MultiPlayerUIManager extends UIManager {
         grid.setHgap(10);
         grid.setVgap(10);
 
-        for (int i = 0; i < MULTIPLAYER_WORD_LENGTH; i++) {
+        for (int i = 0; i < wordLength; i++) {
             Label cell = createWordSetterCell();
             grid.add(cell, i, 0);
         }
@@ -143,12 +146,12 @@ public class MultiPlayerUIManager extends UIManager {
 
     private void handleKeyPress(String letter) {
         if (wordSetterGrid.isVisible()) {
-            if (currentWordSetterCol < MULTIPLAYER_WORD_LENGTH) {
+            if (currentWordSetterCol < wordLength) {
                 updateWordSetterGrid(currentWordSetterCol, letter);
                 currentWordSetterCol++;
             }
         } else {
-            if (currentGuessCol < MULTIPLAYER_WORD_LENGTH) {
+            if (currentGuessCol < wordLength) {
                 updateGrid(currentGuessRow, currentGuessCol, letter);
                 currentGuessCol++;
                 System.out.println("Updated grid: row " + currentGuessRow + ", col " + currentGuessCol + ", letter " + letter);
@@ -175,18 +178,17 @@ public class MultiPlayerUIManager extends UIManager {
         if (wordSetterGrid.isVisible()) {
             handleWordSubmission();
         } else {
-            if (currentGuessCol == MULTIPLAYER_WORD_LENGTH) {
+            if (currentGuessCol == wordLength) {
                 String guess = getGuessFromGrid();
                 System.out.println("Submitting guess: " + guess);
 
-                // If guess is invalid, reset the column index without moving to the next row
-                if (!wordValidator.isValidWord(guess, MULTIPLAYER_WORD_LENGTH)) {
-                    showAlert("Invalid word! Please enter a valid " + MULTIPLAYER_WORD_LENGTH + "-letter word.");
-                    for (int i = 0; i < MULTIPLAYER_WORD_LENGTH; i++) {
-                        updateGrid(currentGuessRow, i, ""); // Clear the row in the UI
+                if (!wordValidator.isValidWord(guess, wordLength)) {
+                    showAlert("Invalid word! Please enter a valid " + wordLength + "-letter word.");
+                    for (int i = 0; i < wordLength; i++) {
+                        updateGrid(currentGuessRow, i, "");
                     }
-                    currentGuessCol = 0; // Reset column index
-                    return; // Do not process the guess or move to next row
+                    currentGuessCol = 0;
+                    return;
                 }
                 wordleGame.processGuess(guess);
 
@@ -200,10 +202,10 @@ public class MultiPlayerUIManager extends UIManager {
 
     private void handleWordSubmission() {
         String secretWord = getWordFromSetterGrid();
-        if (secretWord.length() == MULTIPLAYER_WORD_LENGTH && wordValidator.isValidWord(secretWord, MULTIPLAYER_WORD_LENGTH)) {
+        if (secretWord.length() == wordLength && wordValidator.isValidWord(secretWord, wordLength)) {
             roleManager.handleWordSet(secretWord);
         } else {
-            showAlert("Invalid word! Please enter a valid " + MULTIPLAYER_WORD_LENGTH + "-letter word.");
+            showAlert("Invalid word! Please enter a valid " + wordLength + "-letter word.");
             clearWordSetterGrid();
             currentWordSetterCol = 0;
         }
@@ -222,7 +224,7 @@ public class MultiPlayerUIManager extends UIManager {
 
     private String getWordFromSetterGrid() {
         StringBuilder word = new StringBuilder();
-        for (int i = 0; i < MULTIPLAYER_WORD_LENGTH; i++) {
+        for (int i = 0; i < wordLength; i++) {
             Label cell = (Label) wordSetterGrid.getChildren().get(i);
             word.append(cell.getText());
         }
@@ -231,15 +233,15 @@ public class MultiPlayerUIManager extends UIManager {
 
     private String getGuessFromGrid() {
         StringBuilder guess = new StringBuilder();
-        for (int i = 0; i < MULTIPLAYER_WORD_LENGTH; i++) {
-            Label cell = (Label) gridPane.getChildren().get(currentGuessRow * MULTIPLAYER_WORD_LENGTH + i);
+        for (int i = 0; i < wordLength; i++) {
+            Label cell = (Label) gridPane.getChildren().get(currentGuessRow * wordLength + i);
             guess.append(cell.getText());
         }
         return guess.toString();
     }
 
     private void clearWordSetterGrid() {
-        for (int i = 0; i < MULTIPLAYER_WORD_LENGTH; i++) {
+        for (int i = 0; i < wordLength; i++) {
             updateWordSetterGrid(i, "");
         }
     }
@@ -258,7 +260,7 @@ public class MultiPlayerUIManager extends UIManager {
 
     private void clearGuessingGrid() {
         for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < MULTIPLAYER_WORD_LENGTH; j++) {
+            for (int j = 0; j < wordLength; j++) {
                 updateGrid(i, j, "");
             }
         }
@@ -327,7 +329,7 @@ public class MultiPlayerUIManager extends UIManager {
         gridPane.setVgap(10);
 
         for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < MULTIPLAYER_WORD_LENGTH; j++) {
+            for (int j = 0; j < wordLength; j++) {
                 Label cell = new Label("");
                 cell.setMinSize(60, 60);
                 cell.setStyle("-fx-border-color: #d3d6da; -fx-border-width: 2px; -fx-background-color: #ffffff;");
@@ -340,13 +342,13 @@ public class MultiPlayerUIManager extends UIManager {
 
     @Override
     public void updateGrid(int row, int col, String letter) {
-        Label cell = (Label) gridPane.getChildren().get(row * MULTIPLAYER_WORD_LENGTH + col);
+        Label cell = (Label) gridPane.getChildren().get(row * wordLength + col);
         cell.setText(letter);
     }
 
     @Override
     public void updateGuessFeedback(int row, int col, char guessChar, char correctChar) {
-        Label cell = (Label) gridPane.getChildren().get(row * MULTIPLAYER_WORD_LENGTH + col);
+        Label cell = (Label) gridPane.getChildren().get(row * wordLength + col);
         String style = "-fx-border-color: #d3d6da; -fx-border-width: 2px;";
 
         if (Character.toUpperCase(guessChar) == Character.toUpperCase(correctChar)) {

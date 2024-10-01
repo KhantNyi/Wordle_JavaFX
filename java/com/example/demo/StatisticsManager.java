@@ -14,19 +14,8 @@ import java.util.Map;
 
 public class StatisticsManager {
 
-    // Single-player statistics
     private Map<Integer, SinglePlayerStats> singlePlayerStatsByLength;
-
-    // Multiplayer statistics
-    private int multiPlayerGamesPlayed;
-    private int player1Wins;
-    private int player2Wins;
-    private int player1Losses;
-    private int player2Losses;
-    private int multiPlayerTotalGuessesForWins;
-    private int player1TotalScore;
-    private int player2TotalScore;
-    private int multiPlayerTotalScore;
+    private Map<Integer, MultiPlayerStats> multiPlayerStatsByLength;
 
     public StatisticsManager() {
         resetStats();
@@ -37,15 +26,9 @@ public class StatisticsManager {
         singlePlayerStatsByLength.put(5, new SinglePlayerStats());
         singlePlayerStatsByLength.put(6, new SinglePlayerStats());
 
-        multiPlayerGamesPlayed = 0;
-        player1Wins = 0;
-        player2Wins = 0;
-        player1Losses = 0;
-        player2Losses = 0;
-        multiPlayerTotalGuessesForWins = 0;
-        player1TotalScore = 0;
-        player2TotalScore = 0;
-        multiPlayerTotalScore = 0;
+        multiPlayerStatsByLength = new HashMap<>();
+        multiPlayerStatsByLength.put(5, new MultiPlayerStats());
+        multiPlayerStatsByLength.put(6, new MultiPlayerStats());
     }
 
     // Single-player methods
@@ -70,37 +53,42 @@ public class StatisticsManager {
     }
 
     // Multiplayer methods
-    public void incrementMultiPlayerGamesPlayed() {
-        multiPlayerGamesPlayed++;
-    }
-
-    public void incrementPlayer1Wins() {
-        player1Wins++;
-    }
-
-    public void incrementPlayer2Wins() {
-        player2Wins++;
-    }
-
-    public void incrementPlayer1Losses() {
-        player1Losses++;
-    }
-
-    public void incrementPlayer2Losses() {
-        player2Losses++;
-    }
-
-    public void addMultiPlayerGuessesForWin(int guesses) {
-        multiPlayerTotalGuessesForWins += guesses;
-    }
-
-    public void addMultiPlayerScore(int score, int player) {
-        if (player == 1) {
-            player1TotalScore += score;
-        } else if (player == 2) {
-            player2TotalScore += score;
+    public void incrementMultiPlayerGamesPlayed(int wordLength) {
+        MultiPlayerStats stats = multiPlayerStatsByLength.get(wordLength);
+        stats.gamesPlayed++;
+        if (stats.gamesPlayed % 2 == 0) {
+            stats.roundsPlayed++;
         }
-        multiPlayerTotalScore += score;
+    }
+
+    public void incrementPlayer1Wins(int wordLength) {
+        multiPlayerStatsByLength.get(wordLength).player1Wins++;
+    }
+
+    public void incrementPlayer2Wins(int wordLength) {
+        multiPlayerStatsByLength.get(wordLength).player2Wins++;
+    }
+
+    public void incrementPlayer1Losses(int wordLength) {
+        multiPlayerStatsByLength.get(wordLength).player1Losses++;
+    }
+
+    public void incrementPlayer2Losses(int wordLength) {
+        multiPlayerStatsByLength.get(wordLength).player2Losses++;
+    }
+
+    public void addMultiPlayerGuessesForWin(int guesses, int wordLength) {
+        multiPlayerStatsByLength.get(wordLength).totalGuessesForWins += guesses;
+    }
+
+    public void addMultiPlayerScore(int score, int player, int wordLength) {
+        MultiPlayerStats stats = multiPlayerStatsByLength.get(wordLength);
+        if (player == 1) {
+            stats.player1TotalScore += score;
+        } else if (player == 2) {
+            stats.player2TotalScore += score;
+        }
+        stats.totalScore += score;
     }
 
     public String getSinglePlayerStatistics(int wordLength) {
@@ -129,24 +117,29 @@ public class StatisticsManager {
         );
     }
 
-    public String getMultiPlayerStatistics() {
+    public String getMultiPlayerStatistics(int wordLength) {
+        MultiPlayerStats stats = multiPlayerStatsByLength.get(wordLength);
         return String.format(
-                "Player 1 Wins: %d                          Player 2 Wins: %d\n" +
+                "%d-Letter Mode:\n" +
+                        "Total Games Played: %d\n" +
+                        "Rounds Played: %d\n" +
+                        "Player 1 Wins: %d                          Player 2 Wins: %d\n" +
                         "Player 1 Losses: %d                         Player 2 Losses: %d\n" +
-                        "Player 1 Total Score: %d                Player 2 Total Score: %d\n" +
-                        "\n" +
-                        "Total Games Played: %d\n",
-                player1Wins, player2Wins,
-                player1Losses, player2Losses,
-                player1TotalScore, player2TotalScore,
-                multiPlayerGamesPlayed
+                        "Player 1 Total Score: %d                Player 2 Total Score: %d\n",
+                wordLength,
+                stats.gamesPlayed,
+                stats.roundsPlayed,
+                stats.player1Wins, stats.player2Wins,
+                stats.player1Losses, stats.player2Losses,
+                stats.player1TotalScore, stats.player2TotalScore
         );
     }
 
     public String getAllStatistics() {
         return getSinglePlayerStatistics(5) + "\n\n" +
                 getSinglePlayerStatistics(6) + "\n\n" +
-                getMultiPlayerStatistics();
+                getMultiPlayerStatistics(5) + "\n\n" +
+                getMultiPlayerStatistics(6);
     }
 
     public VBox getSinglePlayerStatisticsNode(int wordLength) {
@@ -181,7 +174,7 @@ public class StatisticsManager {
         return statsBox;
     }
 
-    public VBox getMultiPlayerStatisticsNode() {
+    public VBox getMultiPlayerStatisticsNode(int wordLength) {
         VBox statsBox = new VBox(20);
         statsBox.setAlignment(Pos.CENTER);
         statsBox.setPadding(new Insets(20));
@@ -194,28 +187,37 @@ public class StatisticsManager {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);"
         );
 
-        Label titleLabel = new Label("Multiplayer Statistics");
+        Label titleLabel = new Label(wordLength + "-Letter Multiplayer Statistics");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         titleLabel.setTextFill(Color.BLACK);
+
+        MultiPlayerStats stats = multiPlayerStatsByLength.get(wordLength);
 
         HBox playersBox = new HBox(50);
         playersBox.setAlignment(Pos.CENTER);
 
-        VBox player1Stats = createPlayerStatsBox("Player 1", player1Wins, player1Losses, player1TotalScore);
-        VBox player2Stats = createPlayerStatsBox("Player 2", player2Wins, player2Losses, player2TotalScore);
+        VBox player1Stats = createPlayerStatsBox("Player 1", stats.player1Wins, stats.player1Losses, stats.player1TotalScore);
+        VBox player2Stats = createPlayerStatsBox("Player 2", stats.player2Wins, stats.player2Losses, stats.player2TotalScore);
 
         playersBox.getChildren().addAll(player1Stats, player2Stats);
 
-        // Create a centered HBox for the "Games Played" statistic
-        HBox gamesPlayedBox = createCenteredStatRow("Total Games Played", String.valueOf(multiPlayerGamesPlayed));
+        VBox gamesPlayedBox = new VBox(5);
+        gamesPlayedBox.setAlignment(Pos.CENTER);
+        Label gamesPlayedLabel = new Label("Total Games Played: " + stats.gamesPlayed);
+        gamesPlayedLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        Label roundsPlayedLabel = new Label("Rounds Played: " + stats.roundsPlayed);
+        roundsPlayedLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        Label roundeEplanation = new Label("(A round consists of 2 games where Player 1 and Player 2 switch roles.)");
+        roundeEplanation.setFont(Font.font("Arial", FontWeight.LIGHT, 14));
+        gamesPlayedBox.getChildren().addAll(gamesPlayedLabel, roundsPlayedLabel, roundeEplanation);
 
         statsBox.getChildren().addAll(titleLabel, playersBox, gamesPlayedBox);
         return statsBox;
     }
 
-    private HBox createCenteredStatRow(String label, String value) {
+    private HBox createStatRow(String label, String value) {
         HBox row = new HBox(10);
-        row.setAlignment(Pos.CENTER);
+        row.setAlignment(Pos.CENTER_LEFT);
 
         Label labelNode = new Label(label + ":");
         labelNode.setFont(Font.font("Arial", FontWeight.BOLD, 14));
@@ -268,27 +270,24 @@ public class StatisticsManager {
         return column;
     }
 
-    private HBox createStatRow(String label, String value) {
-        HBox row = new HBox(10);
-        row.setAlignment(Pos.CENTER_LEFT);
-
-        Label labelNode = new Label(label + ":");
-        labelNode.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-        labelNode.setTextFill(Color.BLACK);
-
-        Label valueNode = new Label(value);
-        valueNode.setFont(Font.font("Arial", 14));
-        valueNode.setTextFill(Color.GRAY);
-
-        row.getChildren().addAll(labelNode, valueNode);
-        return row;
-    }
-
     private class SinglePlayerStats {
         int gamesPlayed;
         int wins;
         int losses;
         int totalGuessesForWins;
+        int totalScore;
+    }
+
+    private class MultiPlayerStats {
+        int roundsPlayed;
+        int gamesPlayed;
+        int player1Wins;
+        int player2Wins;
+        int player1Losses;
+        int player2Losses;
+        int totalGuessesForWins;
+        int player1TotalScore;
+        int player2TotalScore;
         int totalScore;
     }
 }

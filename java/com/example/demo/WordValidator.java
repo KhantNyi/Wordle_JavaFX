@@ -24,26 +24,15 @@ public class WordValidator {
     }
 
     private void loadValidWords() {
-        loadWordsFromFile(5);  // Load 5-letter words from the appropriate file
-        loadWordsFromFile(6);
+        loadWordsFromFile(5);  // Load 5-letter words
+        loadWordsFromFile(6);  // Load 6-letter words
     }
 
     private void loadWordsFromFile(int wordLength) {
         Set<String> wordSet = new HashSet<>();
         List<String> wordList = new ArrayList<>();
-        String filename;
+        String filename = wordLength + "-letter-words-list.txt";
 
-        // Determine the filename based on the word length
-        if (wordLength == 5) {
-            filename = "5-letter-words-list.txt";
-        } else if (wordLength == 6) {
-            filename = "6-letter-words-list.txt";
-        } else {
-            System.err.println("Unsupported word length: " + wordLength);
-            return;
-        }
-
-        // Load words from the appropriate file
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
 
@@ -60,11 +49,10 @@ public class WordValidator {
             System.err.println("Error loading valid words from " + filename + ": " + e.getMessage());
         }
 
-        // Store the loaded words in the maps
         validWords.put(wordLength, wordSet);
         wordLists.put(wordLength, wordList);
+        System.out.println("Loaded " + wordSet.size() + " " + wordLength + "-letter words");
     }
-
 
     public boolean isValidWord(String word, int wordLength) {
         Set<String> words = validWords.get(wordLength);
@@ -89,5 +77,10 @@ public class WordValidator {
     public int getWordCount(int wordLength) {
         Set<String> words = validWords.get(wordLength);
         return words != null ? words.size() : 0;
+    }
+
+    // New method to get a list of all valid words for a given length
+    public List<String> getAllValidWords(int wordLength) {
+        return new ArrayList<>(validWords.get(wordLength));
     }
 }

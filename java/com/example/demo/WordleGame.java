@@ -27,6 +27,10 @@ public class WordleGame {
         this.currentGuess = new StringBuilder();
     }
 
+    public WordValidator getWordValidator() {
+        return this.wordValidator;
+    }
+
     public void setMainApplication(Main mainApplication) {
         this.mainApplication = mainApplication;
     }
@@ -55,7 +59,7 @@ public class WordleGame {
         isMultiplayerMode = false;
         resetGameState();
         setRandomSecretWord();
-        System.out.print("Secret word: " + secretWord); //debug
+        System.out.println("Secret word: " + secretWord); // debug
         statisticsManager.incrementSinglePlayerGamesPlayed(wordLength);
     }
 
@@ -73,8 +77,8 @@ public class WordleGame {
         isMultiplayerMode = true;
         resetGameState();
         this.secretWord = secretWord.toUpperCase();
-        System.out.print("Secret word: " + secretWord); //debug
-        statisticsManager.incrementMultiPlayerGamesPlayed();
+        System.out.println("Secret word: " + secretWord); // debug
+        statisticsManager.incrementMultiPlayerGamesPlayed(wordLength);
     }
 
     private void setRandomSecretWord() {
@@ -124,33 +128,14 @@ public class WordleGame {
                     score = 0;
                     handleGameEnd(false);
                 } else {
-                    // Do not increment row if the guess is invalid
-                    if (!wordValidator.isValidWord(guess, wordLength)) {
-                        showAlert("Invalid word! Please enter a valid " + wordLength + "-letter word from the dictionary.");
-                        return;
-                    }
                     currentRow++;
                     currentGuess.setLength(0);
                 }
             } else {
-
                 showAlert("Invalid word! Please enter a valid " + wordLength + "-letter word from the dictionary.");
                 for (int i = 0; i < wordLength; i++) {
-                    updateUI(currentRow, i, ""); // Clear the current row in the UI
-                }
-                currentGuess.setLength(0); // Reset the current guess
-
-                for (int i = 0; i < wordLength; i++) {
-
-                    // Ensure currentGuess has the proper length to avoid index out of bounds
-                    if (currentGuess.length() < wordLength) {
-                        currentGuess.setLength(wordLength);
-                    }
-                    currentGuess.setCharAt(i, ' ');
                     updateUI(currentRow, i, "");
                 }
-                // Reset the column index to start from the beginning
-                currentRow = currentRow;
                 currentGuess.setLength(0);
             }
         }
@@ -186,25 +171,25 @@ public class WordleGame {
         boolean isPlayer1Guessing = !roleManager.isPlayer1SettingWord();
         if (isWin) {
             if (isPlayer1Guessing) {
-                statisticsManager.incrementPlayer1Wins();
-                statisticsManager.addMultiPlayerScore(score, 1);
+                statisticsManager.incrementPlayer1Wins(wordLength);
+                statisticsManager.addMultiPlayerScore(score, 1, wordLength);
                 showAlert("Player 1 wins! They guessed the word in " + attempts + " attempts.\nScore: " + score);
             } else {
-                statisticsManager.incrementPlayer2Wins();
-                statisticsManager.addMultiPlayerScore(score, 2);
+                statisticsManager.incrementPlayer2Wins(wordLength);
+                statisticsManager.addMultiPlayerScore(score, 2, wordLength);
                 showAlert("Player 2 wins! They guessed the word in " + attempts + " attempts.\nScore: " + score);
             }
-            statisticsManager.addMultiPlayerGuessesForWin(attempts);
+            statisticsManager.addMultiPlayerGuessesForWin(attempts, wordLength);
         } else {
             if (isPlayer1Guessing) {
-                statisticsManager.incrementPlayer1Losses();
+                statisticsManager.incrementPlayer1Losses(wordLength);
                 showAlert("Round over. Player 1 couldn't guess the word: " + secretWord + "\nNo points awarded.");
             } else {
-                statisticsManager.incrementPlayer2Losses();
+                statisticsManager.incrementPlayer2Losses(wordLength);
                 showAlert("Round over. Player 2 couldn't guess the word: " + secretWord + "\nNo points awarded.");
             }
         }
-        updateStats(statisticsManager.getMultiPlayerStatistics(), true);
+        updateStats(statisticsManager.getMultiPlayerStatistics(wordLength), true);
         multiPlayerUIManager.endGame();
     }
 
